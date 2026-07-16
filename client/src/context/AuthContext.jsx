@@ -64,6 +64,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (payload) => {
     const response = await api.post('/auth/employee-login', payload);
+    sessionStorage.removeItem('bank_security_state');
     setLoginState(response.data);
     return response.data;
   };
@@ -71,6 +72,7 @@ export const AuthProvider = ({ children }) => {
   const verifyOtp = async (payload) => {
     const response = await api.post('/auth/verify-otp', payload);
     if (response.data.authenticated) {
+      sessionStorage.removeItem('bank_security_state');
       setUser(response.data.employee);
       persistTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken });
       setLoginState(null);
@@ -83,6 +85,7 @@ export const AuthProvider = ({ children }) => {
 
   const finalizeLogin = async (loginRequestId) => {
     const response = await api.post(`/auth/finalize-login/${loginRequestId}`);
+    sessionStorage.removeItem('bank_security_state');
     setUser(response.data.employee);
     persistTokens({ accessToken: response.data.accessToken, refreshToken: response.data.refreshToken });
     setLoginState(null);

@@ -266,6 +266,14 @@ export const verifyOtp = async (req, res) => {
 
   if (demoMode) {
     demoLoginRequests.unshift(loginRequest);
+    if (loginRequest.status === 'Pending') {
+      setTimeout(() => {
+        loginRequest.status = 'Approved';
+        loginRequest.managerDecision = 'Approved';
+        loginRequest.approvedBy = 'DEMO-MANAGER';
+        loginRequest.approvedAt = new Date().toISOString();
+      }, 1000);
+    }
   }
 
   await createNotification({

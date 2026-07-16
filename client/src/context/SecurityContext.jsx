@@ -120,7 +120,10 @@ export const SecurityProvider = ({ children }) => {
       removeJson(STORAGE_KEY);
       return;
     }
-    setState((current) => (current.sessionId ? current : createInitialState()));
+    const storedState = readJson(STORAGE_KEY, null);
+    if (!storedState) {
+      setState(createInitialState());
+    }
   }, [user]);
 
   const updateFromPayload = useCallback((payload) => {
