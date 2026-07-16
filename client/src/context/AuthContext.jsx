@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 
 const read = (key, fallback = null) => {
   try {
-    const value = localStorage.getItem(key);
+    const value = sessionStorage.getItem(key);
     return value ? JSON.parse(value) : fallback;
   } catch {
     return fallback;
@@ -16,8 +16,8 @@ const read = (key, fallback = null) => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => read('bank_user'));
   const [tokens, setTokens] = useState(() => ({
-    accessToken: localStorage.getItem('bank_access_token'),
-    refreshToken: localStorage.getItem('bank_refresh_token')
+    accessToken: sessionStorage.getItem('bank_access_token'),
+    refreshToken: sessionStorage.getItem('bank_refresh_token')
   }));
   const [loginState, setLoginState] = useState(() => read('bank_login_state', null));
   const [notifications, setNotifications] = useState([]);
@@ -42,24 +42,24 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('bank_user', JSON.stringify(user));
+      sessionStorage.setItem('bank_user', JSON.stringify(user));
     } else {
-      localStorage.removeItem('bank_user');
+      sessionStorage.removeItem('bank_user');
     }
   }, [user]);
 
   useEffect(() => {
     if (loginState) {
-      localStorage.setItem('bank_login_state', JSON.stringify(loginState));
+      sessionStorage.setItem('bank_login_state', JSON.stringify(loginState));
     } else {
-      localStorage.removeItem('bank_login_state');
+      sessionStorage.removeItem('bank_login_state');
     }
   }, [loginState]);
 
   const persistTokens = (nextTokens) => {
     setTokens(nextTokens);
-    localStorage.setItem('bank_access_token', nextTokens.accessToken);
-    localStorage.setItem('bank_refresh_token', nextTokens.refreshToken);
+    sessionStorage.setItem('bank_access_token', nextTokens.accessToken);
+    sessionStorage.setItem('bank_refresh_token', nextTokens.refreshToken);
   };
 
   const login = async (payload) => {
@@ -100,10 +100,11 @@ export const AuthProvider = ({ children }) => {
     setTokens({ accessToken: null, refreshToken: null });
     setLoginState(null);
     setRecordingActive(false);
-    localStorage.removeItem('bank_access_token');
-    localStorage.removeItem('bank_refresh_token');
-    localStorage.removeItem('bank_login_state');
-    localStorage.removeItem('bank_user');
+    sessionStorage.removeItem('bank_access_token');
+    sessionStorage.removeItem('bank_refresh_token');
+    sessionStorage.removeItem('bank_login_state');
+    sessionStorage.removeItem('bank_user');
+    sessionStorage.removeItem('bank_security_state');
     disconnectSocket();
   };
 

@@ -32,5 +32,21 @@ export const exportTablePdf = ({ title, subtitle = '', columns = [], rows = [], 
     headStyles: { fillColor: [37, 99, 235] }
   });
 
-  doc.save(filename);
+  const blob = doc.output('blob');
+  window.dispatchEvent(
+    new CustomEvent('bank:secure-document', {
+      detail: {
+        id: crypto.randomUUID(),
+        title,
+        subtitle,
+        filename,
+        metadata,
+        columns,
+        rows,
+        createdAt: new Date().toISOString(),
+        mimeType: 'application/pdf',
+        blob
+      }
+    })
+  );
 };

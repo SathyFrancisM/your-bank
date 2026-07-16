@@ -13,6 +13,7 @@ import { startRecordingSession } from '../services/recordingService.js';
 import { signAccessToken, signRefreshToken } from '../utils/jwt.js';
 import { demoEmployees, demoLoginRequests } from '../services/demoStore.js';
 import { demoMode } from '../config/db.js';
+import { clearEmployeeBlock, isEmployeeBlocked } from '../services/securityEngine.js';
 
 const mapEmployee = (employee) => ({
   id: employee._id,
@@ -389,6 +390,10 @@ export const refreshToken = async (req, res) => {
     return res.status(404).json({ message: 'Employee not found' });
   }
 
+  if (isEmployeeBlocked(employee.employeeId)) {
+    return res.status(403).json({ message: 'Session terminated due to security policy violation' });
+  }
+
   const tokens = await issueTokens(employee, {
     device: employee.lastKnownDevice,
     browser: employee.lastKnownBrowser,
@@ -403,6 +408,18 @@ export const logout = async (req, res) => {
   const { refreshToken, recordingId } = req.body;
   if (refreshToken) {
     await RefreshToken.deleteOne({ token: refreshToken });
+  }
+  if (req.user?.employeeId) {
+    clearEmployeeBlock(req.user.employeeId);
+    await writeAuditLog({
+      actorId: req.user.employeeId,
+      actorRole: req.user.role,
+      employeeName: req.user.name,
+      action: req.body?.reason ? 'Security Policy Logout' : 'Employee Logout',
+      module: 'Authentication',
+      riskScore: Number(req.body?.securityScore || 0),
+      metadata: { reason: req.body?.reason || 'Manual logout', securityAction: req.body?.securityAction || '' }
+    });
   }
   if (recordingId) {
     const { stopRecordingSession } = await import('../services/recordingService.js');

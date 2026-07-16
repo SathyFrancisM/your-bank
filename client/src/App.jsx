@@ -23,6 +23,7 @@ const NotificationsPage = lazy(() => import('./pages/NotificationsPage.jsx'));
 const RecordingsPage = lazy(() => import('./pages/RecordingsPage.jsx'));
 const RiskPage = lazy(() => import('./pages/RiskPage.jsx'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage.jsx'));
+const SecurityPage = lazy(() => import('./pages/SecurityPage.jsx'));
 
 const fallback = <div className="min-h-screen p-8 text-sm text-slate-600 dark:text-slate-300">Loading banking portal...</div>;
 
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="recordings" element={<RecordingsPage />} />
             <Route path="risk" element={<RiskPage />} />
+            <Route path="security" element={<SecurityPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
         </Route>

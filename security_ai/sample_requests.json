@@ -1,0 +1,47 @@
+{
+  "analyze": {
+    "user_id": "EMP-001",
+    "username": "Asha",
+    "event_type": "navigation",
+    "login_hour": 22,
+    "downloads_count": 0,
+    "failed_logins": 1,
+    "tab_switch_detected": true,
+    "unusual_time": true,
+    "honeypot_triggered": false,
+    "route": "/transactions",
+    "previous_route": "/accounts",
+    "activity_label": "transactions",
+    "actions_per_minute": 24,
+    "files_accessed": 1,
+    "file_size_mb": 0.0,
+    "current_step": "transactions",
+    "requested_file_name": "",
+    "metadata": {
+      "device": "desktop"
+    }
+  },
+  "analyze_bulk_download": {
+    "user_id": "EMP-001",
+    "username": "Asha",
+    "event_type": "download",
+    "login_hour": 2,
+    "downloads_count": 8,
+    "failed_logins": 0,
+    "tab_switch_detected": false,
+    "unusual_time": true,
+    "honeypot_triggered": false,
+    "route": "/reports",
+    "previous_route": "/dashboard",
+    "activity_label": "reports",
+    "actions_per_minute": 61,
+    "files_accessed": 3,
+    "file_size_mb": 74.2,
+    "current_step": "reports",
+    "requested_file_name": "audit_snapshot.pdf",
+    "metadata": {
+      "bulk_export": true
+    }
+  },
+  "upload_note": "POST /upload uses multipart form-data with user_id and username form fields plus a file part."
+}

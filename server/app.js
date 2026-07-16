@@ -19,6 +19,7 @@ import { managerRoutes } from './routes/managerRoutes.js';
 import { recordingRoutes } from './routes/recordingRoutes.js';
 import { adminRoutes } from './routes/adminRoutes.js';
 import { dashboardRoutes } from './routes/dashboardRoutes.js';
+import { securityRoutes } from './routes/securityRoutes.js';
 import { env } from './config/env.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
@@ -58,6 +59,7 @@ app.use('/api/manager', managerRoutes);
 app.use('/api/recordings', recordingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/security', securityRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
