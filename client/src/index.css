@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --bg: #eef4ff;
+  --bg-2: #f7fbff;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --card: rgba(255, 255, 255, 0.72);
+  --card-border: rgba(148, 163, 184, 0.24);
+}
+
+html.dark {
+  color-scheme: dark;
+  --bg: #07111f;
+  --bg-2: #0f172a;
+  --ink: #e2e8f0;
+  --muted: #94a3b8;
+  --card: rgba(15, 23, 42, 0.72);
+  --card-border: rgba(59, 130, 246, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), transparent 32%),
+    radial-gradient(circle at 85% 15%, rgba(14, 165, 233, 0.18), transparent 26%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.12), transparent 90%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.22);
+}
+
+.glass-card {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.12);
+  backdrop-filter: blur(22px);
+}
+
+.bank-scroll::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.bank-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 999px;
+}
+
+.bank-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
