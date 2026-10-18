@@ -6,7 +6,7 @@ export const connectSocket = (token) => {
   if (socket) {
     return socket;
   }
-  socket = io(import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000', {
+  socket = io(import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, '') || window.location.origin, {
     transports: ['websocket'],
     auth: { token }
   });

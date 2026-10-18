@@ -33,7 +33,7 @@ const limiter = rateLimit({
 });
 
 app.use(helmet());
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use(cors({ origin: env.CLIENT_URLS, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
@@ -63,3 +63,5 @@ app.use('/api/security', securityRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
+
+export default app;
