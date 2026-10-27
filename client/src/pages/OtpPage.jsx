@@ -37,7 +37,9 @@ export default function OtpPage() {
         navigate(`/${response.employee.role.toLowerCase()}/dashboard`, { replace: true });
       }
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'OTP verification failed');
+      setError(requestError.response?.data?.message || (requestError.response
+        ? `OTP verification failed (HTTP ${requestError.response.status})`
+        : 'Cannot reach the verification service. Check the Vercel /api route and server logs.'));
     } finally {
       setLoading(false);
     }

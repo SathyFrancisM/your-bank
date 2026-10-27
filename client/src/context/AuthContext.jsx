@@ -56,6 +56,26 @@ export const AuthProvider = ({ children }) => {
     }
   }, [loginState]);
 
+  useEffect(() => {
+    const handleTokensRefreshed = (event) => setTokens(event.detail);
+    const handleAuthExpired = () => {
+      setUser(null);
+      setTokens({ accessToken: null, refreshToken: null });
+      setLoginState(null);
+      setRecordingActive(false);
+      sessionStorage.removeItem('bank_user');
+      sessionStorage.removeItem('bank_login_state');
+      disconnectSocket();
+    };
+
+    window.addEventListener('bank:tokens-refreshed', handleTokensRefreshed);
+    window.addEventListener('bank:auth-expired', handleAuthExpired);
+    return () => {
+      window.removeEventListener('bank:tokens-refreshed', handleTokensRefreshed);
+      window.removeEventListener('bank:auth-expired', handleAuthExpired);
+    };
+  }, []);
+
   const persistTokens = (nextTokens) => {
     setTokens(nextTokens);
     sessionStorage.setItem('bank_access_token', nextTokens.accessToken);

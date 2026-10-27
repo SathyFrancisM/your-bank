@@ -38,7 +38,9 @@ export default function LoginPage() {
       });
       navigate('/otp', { state: response });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'Login failed');
+      setError(requestError.response?.data?.message || (requestError.response
+        ? `Login failed (HTTP ${requestError.response.status})`
+        : 'Cannot reach the login service. Check the Vercel /api route and server logs.'));
     } finally {
       setLoading(false);
     }

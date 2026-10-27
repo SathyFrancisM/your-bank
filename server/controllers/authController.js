@@ -11,7 +11,7 @@ import { calculateEmployeeRisk } from '../services/riskEngine.js';
 import { writeAuditLog } from '../services/auditService.js';
 import { createNotification } from '../services/notificationService.js';
 import { startRecordingSession } from '../services/recordingService.js';
-import { signAccessToken, signRefreshToken } from '../utils/jwt.js';
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt.js';
 import { demoEmployees, demoLoginRequests } from '../services/demoStore.js';
 import { demoMode } from '../config/db.js';
 import { clearEmployeeBlock, isEmployeeBlocked } from '../services/securityEngine.js';
@@ -399,12 +399,22 @@ export const refreshToken = async (req, res) => {
     return res.status(400).json({ message: 'Refresh token required' });
   }
 
-  const stored = await RefreshToken.findOne({ token: refreshToken });
-  if (!stored) {
-    return res.status(401).json({ message: 'Refresh token not recognized' });
+  let employee;
+  if (demoMode) {
+    try {
+      const payload = verifyRefreshToken(refreshToken);
+      employee = demoEmployees.find((item) => item.employeeId === payload.employeeId);
+    } catch {
+      return res.status(401).json({ message: 'Invalid or expired refresh token' });
+    }
+  } else {
+    const stored = await RefreshToken.findOne({ token: refreshToken });
+    if (!stored) {
+      return res.status(401).json({ message: 'Refresh token not recognized' });
+    }
+    employee = await Employee.findOne({ employeeId: stored.employeeId });
   }
 
-  const employee = await Employee.findOne({ employeeId: stored.employeeId });
   if (!employee) {
     return res.status(404).json({ message: 'Employee not found' });
   }
