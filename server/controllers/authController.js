@@ -3,8 +3,9 @@ import { Employee } from '../models/Employee.js';
 import { LoginRequest } from '../models/LoginRequest.js';
 import { RiskScore } from '../models/RiskScore.js';
 import { RefreshToken } from '../models/RefreshToken.js';
-import { createOtpSession, verifyOtpSession } from '../services/otpService.js';
+import { createOtpSession, deleteOtpSession, verifyOtpSession } from '../services/otpService.js';
 import { createLoginSession, getLoginSession, updateLoginSession, deleteLoginSession } from '../services/authSessionService.js';
+import { sendOtpEmail } from '../services/emailService.js';
 import { evaluateLoginSecurity } from '../services/loginSecurity.js';
 import { calculateEmployeeRisk } from '../services/riskEngine.js';
 import { writeAuditLog } from '../services/auditService.js';
@@ -101,13 +102,6 @@ export const employeeLogin = async (req, res) => {
     vpnDetected
   });
 
-  const { sessionId, otp } = createOtpSession({
-    employee: mapEmployee(employee),
-    context: { device, browser, os, ipAddress, location, timezone },
-    securityAssessment,
-    currentTime: currentTime || new Date().toISOString()
-  });
-
   const loginSessionId = createLoginSession({
     employeeId: employee.employeeId,
     employeeName: employee.name,
@@ -119,9 +113,26 @@ export const employeeLogin = async (req, res) => {
     location,
     timezone,
     securityAssessment,
-    otpSessionId: sessionId,
     state: securityAssessment.allowImmediately ? 'OTP_PENDING' : 'MANAGER_PENDING'
   });
+
+  const { sessionId, otp } = await createOtpSession({
+    employee: mapEmployee(employee),
+    context: { device, browser, os, ipAddress, location, timezone },
+    securityAssessment,
+    currentTime: currentTime || new Date().toISOString(),
+    loginSessionId
+  });
+
+  if (!demoMode) {
+    try {
+      await sendOtpEmail(employee.email, otp);
+    } catch (error) {
+      await deleteOtpSession(sessionId);
+      deleteLoginSession(loginSessionId);
+      throw error;
+    }
+  }
 
   await writeAuditLog({
     actorId: employee.employeeId,
@@ -140,8 +151,8 @@ export const employeeLogin = async (req, res) => {
   return res.json({
     otpSessionId: sessionId,
     loginSessionId,
-    otpDelivery: 'simulated',
-    demoOtp: process.env.NODE_ENV === 'production' ? undefined : otp,
+    otpDelivery: demoMode ? 'simulated' : 'email',
+    demoOtp: demoMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
     securityAssessment,
     employee: mapEmployee(employee)
   });
@@ -149,12 +160,12 @@ export const employeeLogin = async (req, res) => {
 
 export const verifyOtp = async (req, res) => {
   const { otpSessionId, otp } = req.body;
-  const verification = verifyOtpSession(otpSessionId, otp);
+  const verification = await verifyOtpSession(otpSessionId, otp);
   if (!verification.ok) {
     return res.status(400).json({ message: verification.message });
   }
 
-  const session = getLoginSession(verification.payload ? otpSessionId : '');
+  const session = getLoginSession(verification.payload.loginSessionId);
   const employee = demoMode ? demoEmployees.find((item) => item.employeeId === verification.payload.employee.employeeId) : await Employee.findOne({ employeeId: verification.payload.employee.employeeId });
   if (!employee) {
     return res.status(404).json({ message: 'Employee not found' });
@@ -244,7 +255,7 @@ export const verifyOtp = async (req, res) => {
       browserMatch: verification.payload.securityAssessment.browserMatch,
       riskScore: calculateEmployeeRisk({ loginReasons: verification.payload.securityAssessment.reasons }).score,
       status: 'Pending',
-      loginSessionId: verification.payload ? session?.sessionId || otpSessionId : otpSessionId
+      loginSessionId: session?.sessionId || verification.payload.loginSessionId
     } : await LoginRequest.create({
     employeeId: employee.employeeId,
     employeeName: employee.name,
@@ -261,7 +272,7 @@ export const verifyOtp = async (req, res) => {
     browserMatch: verification.payload.securityAssessment.browserMatch,
     riskScore: calculateEmployeeRisk({ loginReasons: verification.payload.securityAssessment.reasons }).score,
     status: 'Pending',
-    loginSessionId: verification.payload ? session?.sessionId || otpSessionId : otpSessionId
+    loginSessionId: session?.sessionId || verification.payload.loginSessionId
   });
 
   if (demoMode) {

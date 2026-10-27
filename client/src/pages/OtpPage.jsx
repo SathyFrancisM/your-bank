@@ -55,10 +55,15 @@ export default function OtpPage() {
             Demo OTP: <span className="font-mono font-bold">{loginState.demoOtp}</span>
           </div>
         )}
+        {loginState.otpDelivery === 'email' && (
+          <p className="mb-5 text-sm text-slate-600 dark:text-slate-300">
+            A six-digit verification code was sent to your registered email address.
+          </p>
+        )}
         <form onSubmit={submit} className="space-y-5">
           <OtpInput value={otp} onChange={setOtp} />
           {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{error}</div>}
-          <button type="submit" disabled={loading} className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-70">
+          <button type="submit" disabled={loading || otp.length !== 6} className="w-full rounded-2xl bg-blue-600 px-5 py-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-70">
             {loading ? 'Verifying...' : 'Verify OTP'}
           </button>
         </form>
