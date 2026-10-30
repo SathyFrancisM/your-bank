@@ -1,4 +1,6 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -24,6 +26,8 @@ import { env } from './config/env.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 export const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const clientDistPath = path.resolve(__dirname, '../client/dist');
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -60,6 +64,16 @@ app.use('/api/recordings', recordingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/security', securityRoutes);
+
+app.use(express.static(clientDistPath));
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  return res.sendFile(path.join(clientDistPath, 'index.html'), (error) => {
+    if (error) next(error);
+  });
+});
 
 app.use(notFound);
 app.use(errorHandler);

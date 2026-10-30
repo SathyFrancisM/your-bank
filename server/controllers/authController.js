@@ -151,8 +151,13 @@ export const employeeLogin = async (req, res) => {
   return res.json({
     otpSessionId: sessionId,
     loginSessionId,
+<<<<<<< Updated upstream
     otpDelivery: demoMode ? 'simulated' : 'email',
     demoOtp: demoMode && process.env.NODE_ENV !== 'production' ? otp : undefined,
+=======
+    otpDelivery: 'simulated',
+    demoOtp: demoMode ? otp : undefined,
+>>>>>>> Stashed changes
     securityAssessment,
     employee: mapEmployee(employee)
   });
