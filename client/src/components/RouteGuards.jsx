@@ -10,6 +10,9 @@ export function RequireAuth() {
   }
 
   if (loginState && location.pathname !== '/otp' && location.pathname !== '/pending-approval') {
+    if (loginState.requiresManagerApproval) {
+      return <Navigate to="/pending-approval" replace />;
+    }
     return <Navigate to="/otp" replace />;
   }
 

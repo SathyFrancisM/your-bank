@@ -4,6 +4,7 @@ import Layout from './components/Layout.jsx';
 import { RequireAuth, PublicOnly } from './components/RouteGuards.jsx';
 
 const LoginPage = lazy(() => import('./pages/LoginPage.jsx'));
+const SignUpPage = lazy(() => import('./pages/SignUpPage.jsx'));
 const OtpPage = lazy(() => import('./pages/OtpPage.jsx'));
 const PendingApprovalPage = lazy(() => import('./pages/PendingApprovalPage.jsx'));
 const DashboardRedirect = lazy(() => import('./pages/DashboardRedirect.jsx'));
@@ -33,6 +34,7 @@ export default function App() {
       <Routes>
         <Route element={<PublicOnly />}>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<SignUpPage />} />
         </Route>
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
@@ -41,6 +43,7 @@ export default function App() {
           <Route path="/" element={<Layout title="Core Banking Portal" subtitle="Internal bank employee operations and threat monitoring." />}>
             <Route index element={<DashboardRedirect />} />
             <Route path="employee/dashboard" element={<EmployeeDashboardPage />} />
+            <Route path="teller/dashboard" element={<Navigate to="/employee/dashboard" replace />} />
             <Route path="manager/dashboard" element={<ManagerDashboardPage />} />
             <Route path="admin/dashboard" element={<AdminDashboardPage />} />
             <Route path="auditor/dashboard" element={<AuditorDashboardPage />} />

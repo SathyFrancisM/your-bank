@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaFingerprint, FaIdCard, FaLock } from 'react-icons/fa';
+import { useNavigate, Link } from 'react-router-dom';
+import { FaFingerprint, FaIdCard, FaLock, FaUserPlus } from 'react-icons/fa';
 import Field from '../components/Field.jsx';
 import Panel from '../components/Panel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { collectLoginContext } from '../utils/device.js';
 
-const demoAccounts = [
-  { label: 'Admin', employeeId: 'ADM001', password: 'Bank@123' },
-  { label: 'Manager', employeeId: 'MGR001', password: 'Bank@123' },
-  { label: 'Teller', employeeId: 'TEL001', password: 'Bank@123' },
-  { label: 'Auditor', employeeId: 'AUD001', password: 'Bank@123' }
+const accountHints = [
+  { label: 'Admin', employeeId: 'ADM001', description: 'Operations & Governance' },
+  { label: 'Manager', employeeId: 'MGR001', description: 'Approval & Risk Management' },
+  { label: 'Teller', employeeId: 'TEL001', description: 'Counter & Transactions' },
+  { label: 'Auditor', employeeId: 'AUD001', description: 'Audit & Compliance' }
 ];
 
 export default function LoginPage() {
@@ -20,13 +20,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const fillDemoAccount = (account) => {
-    setForm({ employeeId: account.employeeId, password: account.password });
+  const fillId = (id) => {
+    setForm((f) => ({ ...f, employeeId: id }));
     setError('');
   };
 
   const submit = async (event) => {
     event.preventDefault();
+    if (!form.employeeId.trim() || !form.password) {
+      setError('Employee ID and password are required');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -38,9 +42,12 @@ export default function LoginPage() {
       });
       navigate('/otp', { state: response });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || (requestError.response
-        ? `Login failed (HTTP ${requestError.response.status})`
-        : 'Cannot reach the login service. Check the Vercel /api route and server logs.'));
+      setError(
+        requestError.response?.data?.message ||
+        (requestError.response
+          ? `Login failed (HTTP ${requestError.response.status})`
+          : 'Cannot reach the login service. Ensure the server is running.')
+      );
     } finally {
       setLoading(false);
     }
@@ -79,10 +86,10 @@ export default function LoginPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Expected flow</div>
-                  <div className="mt-2 text-sm text-slate-700">Login → OTP → Workspace → Policy monitored actions</div>
+                  <div className="mt-2 text-sm text-slate-700">Login → OTP email → Workspace → Policy monitored actions</div>
                 </div>
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Behavior policy</div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Behaviour policy</div>
                   <div className="mt-2 text-sm text-slate-700">Tab switching, download attempts, and honeypot access are blocked immediately.</div>
                 </div>
               </div>
@@ -91,33 +98,79 @@ export default function LoginPage() {
         </Panel>
 
         <Panel className="fade-up rounded-[2.25rem] p-8 ui-glow" title="Employee Login" subtitle="Use your Employee ID and password to enter the secure workflow.">
-          <form onSubmit={submit} className="space-y-5">
-            <Field label="Employee ID" icon={FaIdCard} value={form.employeeId} onChange={(event) => setForm({ ...form, employeeId: event.target.value })} placeholder="ADM001" required />
-            <Field label="Password" icon={FaLock} type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} placeholder="Bank@123" required />
-            {error && <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">{error}</div>}
-            <button type="submit" disabled={loading} className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-70">
+          <form onSubmit={submit} className="space-y-5" noValidate>
+            <Field
+              id="login-employee-id"
+              label="Employee ID"
+              icon={FaIdCard}
+              value={form.employeeId}
+              onChange={(e) => { setForm({ ...form, employeeId: e.target.value.toUpperCase() }); setError(''); }}
+              placeholder="e.g. ADM001"
+              required
+              autoComplete="username"
+            />
+            <Field
+              id="login-password"
+              label="Password"
+              icon={FaLock}
+              type="password"
+              value={form.password}
+              onChange={(e) => { setForm({ ...form, password: e.target.value }); setError(''); }}
+              placeholder="Your account password"
+              required
+              autoComplete="current-password"
+            />
+            {error && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+                {error}
+              </div>
+            )}
+            <button
+              id="login-submit"
+              type="submit"
+              disabled={loading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-4 text-sm font-bold text-white transition hover:bg-blue-700 disabled:opacity-70"
+            >
               <FaFingerprint />
               {loading ? 'Verifying...' : 'Generate OTP'}
             </button>
           </form>
+
+          {/* Quick-fill Employee IDs (no passwords exposed) */}
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/5">
-            <p className="text-sm font-semibold text-slate-900 dark:text-white">Demo credentials</p>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">All demo accounts use the same password: Bank@123.</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">Quick-fill Employee ID</p>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Click a role to fill your Employee ID — you still need your own password:</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {demoAccounts.map((account) => (
+              {accountHints.map((account) => (
                 <button
                   key={account.employeeId}
+                  id={`login-quick-${account.employeeId}`}
                   type="button"
-                  onClick={() => fillDemoAccount(account)}
+                  onClick={() => fillId(account.employeeId)}
                   className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-left text-sm transition hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-slate-950/30 dark:hover:border-blue-500/30 dark:hover:bg-blue-500/10"
                 >
                   <div className="font-semibold text-slate-900 dark:text-white">{account.label}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{account.employeeId}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">{account.employeeId} · {account.description}</div>
                 </button>
               ))}
             </div>
           </div>
-          <div className="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
+
+          {/* Sign up link */}
+          <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4 text-center dark:border-white/10 dark:bg-white/5">
+            <p className="text-sm text-slate-600 dark:text-slate-300">
+              New employee?{' '}
+              <Link
+                to="/register"
+                id="login-signup-link"
+                className="inline-flex items-center gap-1.5 font-semibold text-blue-600 hover:underline dark:text-blue-400"
+              >
+                <FaUserPlus className="text-xs" /> Create your account
+              </Link>
+            </p>
+          </div>
+
+          <div className="mt-3 rounded-2xl border border-dashed border-slate-300 bg-white/70 p-4 text-sm text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.04)] dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
             GPS and metadata are captured automatically after browser permission and are never requested as manual input.
           </div>
         </Panel>

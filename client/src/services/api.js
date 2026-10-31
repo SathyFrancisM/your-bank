@@ -50,7 +50,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const request = error.config;
       const route = String(request?.url || '');
-      const isAuthFlow = ['/auth/employee-login', '/auth/verify-otp', '/auth/finalize-login', '/auth/refresh-token', '/auth/logout']
+      const isAuthFlow = ['/auth/employee-login', '/auth/verify-otp', '/auth/finalize-login', '/auth/refresh-token', '/auth/logout', '/auth/register']
         .some((path) => route.includes(path));
 
       if (request && !request._authRetry && !isAuthFlow) {

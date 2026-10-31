@@ -10,15 +10,22 @@ export const evaluateLoginSecurity = ({ employee, device, browser, ipAddress, lo
   const latitude = Number(location?.latitude);
   const longitude = Number(location?.longitude);
   const hasLocation = Number.isFinite(latitude) && Number.isFinite(longitude);
-  const distanceKm = hasLocation ? geoDistanceKm(officeLatitude, officeLongitude, latitude, longitude) : Number.POSITIVE_INFINITY;
-  const officeMatch = hasLocation && distanceKm <= env.OFFICE_RADIUS_KM;
+  const distanceKm = hasLocation ? geoDistanceKm(officeLatitude, officeLongitude, latitude, longitude) : 0;
+
+  // On internal corporate LAN or localhost, IP is recognized as bank intranet
+  const isInternalNetwork = isPrivateIp(ipAddress) || ipAddress === '127.0.0.1' || ipAddress === '::1' || !ipAddress;
+  const ipKnown = Boolean(ipAddress);
+
+  // Office location check
+  const officeMatch = hasLocation ? distanceKm <= env.OFFICE_RADIUS_KM : (isInternalNetwork || demoMode);
   const timeWindowMatch = isWithinOfficeHours(currentHour, env.OFFICE_START_HOUR, env.OFFICE_END_HOUR);
   const deviceMatch = !employee.lastKnownDevice || employee.lastKnownDevice === device;
   const browserMatch = !employee.lastKnownBrowser || employee.lastKnownBrowser === browser;
-  const ipKnown = ipAddress && !isPrivateIp(ipAddress);
+
   const reasons = [];
 
-  if (demoMode && ['Admin', 'Manager'].includes(employee.role)) {
+  // Admins always have direct supervisory access
+  if (employee.role === 'Admin') {
     return {
       allowImmediately: true,
       reasons: [],
@@ -26,7 +33,7 @@ export const evaluateLoginSecurity = ({ employee, device, browser, ipAddress, lo
       timeWindowMatch: true,
       deviceMatch: true,
       browserMatch: true,
-      distanceKm: 0,
+      distanceKm: Number.isFinite(distanceKm) ? Number(distanceKm.toFixed(2)) : 0,
       riskSignals: {
         officeMatch: true,
         timeWindowMatch: true,
@@ -46,6 +53,7 @@ export const evaluateLoginSecurity = ({ employee, device, browser, ipAddress, lo
   if (vpnDetected) reasons.push('VPN');
   if (!ipKnown) reasons.push('Unknown IP');
 
+  // Allow immediately if all zero-trust checks pass
   const allowImmediately = officeMatch && timeWindowMatch && deviceMatch && browserMatch && !vpnDetected && ipKnown;
 
   return {

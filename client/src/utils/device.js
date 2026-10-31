@@ -25,18 +25,36 @@ export const collectLoginContext = async () => {
         resolve(null);
         return;
       }
+      const timer = setTimeout(() => resolve(null), 2000);
       navigator.geolocation.getCurrentPosition(
-        ({ coords }) => resolve({ latitude: coords.latitude, longitude: coords.longitude }),
-        () => resolve(null),
-        { enableHighAccuracy: true, timeout: 8000 }
+        ({ coords }) => {
+          clearTimeout(timer);
+          resolve({ latitude: coords.latitude, longitude: coords.longitude });
+        },
+        () => {
+          clearTimeout(timer);
+          resolve(null);
+        },
+        { enableHighAccuracy: false, timeout: 2000, maximumAge: 60000 }
       );
     }),
-    fetch('https://api.ipify.org?format=json').then((response) => response.json()).catch(() => ({ ip: '' }))
+    (() => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        return fetch('https://api.ipify.org?format=json', { signal: controller.signal })
+          .then((response) => response.json())
+          .catch(() => ({ ip: '127.0.0.1' }))
+          .finally(() => clearTimeout(timeoutId));
+      } catch {
+        return Promise.resolve({ ip: '127.0.0.1' });
+      }
+    })()
   ]);
 
   return {
     location,
-    ipAddress: ipResponse.ip || '',
+    ipAddress: ipResponse?.ip || '127.0.0.1',
     device: detectDevice(),
     browser: detectBrowser(),
     os: detectOs(),

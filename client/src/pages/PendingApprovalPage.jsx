@@ -3,6 +3,13 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Panel from '../components/Panel.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
+const roleRoute = {
+  Admin: '/admin/dashboard',
+  Manager: '/manager/dashboard',
+  Teller: '/employee/dashboard',
+  Auditor: '/auditor/dashboard'
+};
+
 export default function PendingApprovalPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,7 +30,8 @@ export default function PendingApprovalPage() {
       try {
         setBusy(true);
         const response = await auth.finalizeLogin(pending.loginRequestId);
-        navigate(`/${response.employee.role.toLowerCase()}/dashboard`, { replace: true });
+        const role = response.employee?.role || 'Teller';
+        navigate(roleRoute[role] || '/employee/dashboard', { replace: true });
       } catch (requestError) {
         if (requestError.response?.status === 409) {
           setMessage('Manager approval is still pending. The employee cannot access the portal until approval is granted.');
@@ -31,9 +39,9 @@ export default function PendingApprovalPage() {
       } finally {
         setBusy(false);
       }
-    }, 5000);
+    }, 2000);
     return () => clearInterval(timer);
-  }, [pending?.loginRequestId]);
+  }, [pending?.loginRequestId, navigate, auth]);
 
   if (!pending) return null;
 
